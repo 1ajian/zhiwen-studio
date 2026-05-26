@@ -44,3 +44,8 @@ knife4j:
   enable: true
   setting:
     language: zh_cn
+
+# 配置加密盐值
+user:
+  password:
+    salt: "xuxiaojian"

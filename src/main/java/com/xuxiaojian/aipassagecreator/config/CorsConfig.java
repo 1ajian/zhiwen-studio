@@ -1,8 +1,12 @@
 package com.xuxiaojian.aipassagecreator.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
+import org.springframework.format.datetime.standard.DateTimeFormatterRegistrar;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.time.format.DateTimeFormatter;
 
 /**
  * ClassName: CorsConfig
@@ -24,5 +28,12 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("*");
+    }
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        DateTimeFormatterRegistrar registrar = new DateTimeFormatterRegistrar();
+        registrar.setDateTimeFormatter(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        registrar.registerFormatters(registry);
     }
 }

@@ -14,9 +14,9 @@ import lombok.Data;
 @Data
 public class PageRequest {
 
-    private int pageNum = 1;
+    private Long pageNum = 1L;
 
-    private int pageSize = 10;
+    private Long pageSize = 10L;
 
     private String sortField;
 
