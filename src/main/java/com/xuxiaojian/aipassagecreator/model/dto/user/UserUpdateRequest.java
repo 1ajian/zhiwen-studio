@@ -1,34 +1,29 @@
-package com.xuxiaojian.aipassagecreator.model.dto;
+package com.xuxiaojian.aipassagecreator.model.dto.user;
 
 import lombok.Data;
 
 import java.io.Serializable;
 
 /**
- * ClassName: UserUpdateBySelfDto
+ * ClassName: UserUpdateRequest
  * Package: com.xuxiaojian.aipassagecreator.model.dto
  * Description:
  *
  * @Author 阿健
- * @Create 2026-05-26 22:29
+ * @Create 2026-05-26 21:50
  * @Version 1.0
  */
 @Data
-public class UserUpdateBySelfDto implements Serializable {
+public class UserUpdateRequest implements Serializable {
     /**
      * id
      */
     private Long id;
 
     /**
-     * 当前密码
+     * 密码
      */
-    private String oldUserPassword;
-
-    /**
-     * 新密码
-     */
-    private String newUserPassword;
+    private String userPassword;
 
     /**
      * 用户昵称
@@ -45,6 +40,10 @@ public class UserUpdateBySelfDto implements Serializable {
      */
     private String userProfile;
 
+    /**
+     * 用户角色：user/admin
+     */
+    private String userRole;
 
     private static final long serialVersionUID = 1L;
 }

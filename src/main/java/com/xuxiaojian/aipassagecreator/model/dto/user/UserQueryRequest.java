@@ -1,4 +1,4 @@
-package com.xuxiaojian.aipassagecreator.model.dto;
+package com.xuxiaojian.aipassagecreator.model.dto.user;
 
 import com.xuxiaojian.aipassagecreator.common.PageRequest;
 import lombok.Data;

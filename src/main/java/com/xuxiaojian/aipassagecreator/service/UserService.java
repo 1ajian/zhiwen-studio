@@ -2,7 +2,7 @@ package com.xuxiaojian.aipassagecreator.service;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
-import com.xuxiaojian.aipassagecreator.model.dto.UserQueryRequest;
+import com.xuxiaojian.aipassagecreator.model.dto.user.UserQueryRequest;
 import com.xuxiaojian.aipassagecreator.model.entity.User;
 import com.xuxiaojian.aipassagecreator.model.vo.LoginUserVO;
 import com.xuxiaojian.aipassagecreator.model.vo.UserVO;

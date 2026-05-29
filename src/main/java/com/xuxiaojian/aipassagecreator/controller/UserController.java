@@ -2,7 +2,6 @@ package com.xuxiaojian.aipassagecreator.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.fasterxml.jackson.databind.ser.Serializers;
 import com.mybatisflex.core.paginate.Page;
 import com.xuxiaojian.aipassagecreator.annotation.AuthCheck;
 import com.xuxiaojian.aipassagecreator.common.BaseResponse;
@@ -12,7 +11,7 @@ import com.xuxiaojian.aipassagecreator.constant.UserConstant;
 import com.xuxiaojian.aipassagecreator.exception.BusinessException;
 import com.xuxiaojian.aipassagecreator.exception.ErrorCode;
 import com.xuxiaojian.aipassagecreator.exception.ThrowUtils;
-import com.xuxiaojian.aipassagecreator.model.dto.*;
+import com.xuxiaojian.aipassagecreator.model.dto.user.*;
 import com.xuxiaojian.aipassagecreator.model.entity.User;
 import com.xuxiaojian.aipassagecreator.model.vo.LoginUserVO;
 import com.xuxiaojian.aipassagecreator.model.vo.UserVO;
@@ -114,7 +113,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/updateBySelf")
-    public BaseResponse<Boolean> updateByUser(@RequestBody UserUpdateBySelfDto userUpdateBySelfDto,HttpServletRequest request) {
+    public BaseResponse<Boolean> updateByUser(@RequestBody UserUpdateBySelfDto userUpdateBySelfDto, HttpServletRequest request) {
         ThrowUtils.throwIf(userUpdateBySelfDto == null,ErrorCode.PARAMS_ERROR,"请求参数为空");
         String newUserPassword = userUpdateBySelfDto.getNewUserPassword();
         String oldUserPassword = userUpdateBySelfDto.getOldUserPassword();

@@ -2,14 +2,13 @@ package com.xuxiaojian.aipassagecreator.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.xuxiaojian.aipassagecreator.exception.BusinessException;
 import com.xuxiaojian.aipassagecreator.exception.ErrorCode;
 import com.xuxiaojian.aipassagecreator.exception.ThrowUtils;
 import com.xuxiaojian.aipassagecreator.mapper.UserMapper;
-import com.xuxiaojian.aipassagecreator.model.dto.UserQueryRequest;
+import com.xuxiaojian.aipassagecreator.model.dto.user.UserQueryRequest;
 import com.xuxiaojian.aipassagecreator.model.entity.User;
 import com.xuxiaojian.aipassagecreator.model.enums.UserRoleEnum;
 import com.xuxiaojian.aipassagecreator.model.vo.LoginUserVO;
