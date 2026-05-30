@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -51,6 +50,11 @@ public class Article implements Serializable {
      * 选题
      */
     private String topic;
+
+    /**
+     * 文章风格：tech/emotional/educational/humorous
+     */
+    private String style;
 
     /**
      * 主标题

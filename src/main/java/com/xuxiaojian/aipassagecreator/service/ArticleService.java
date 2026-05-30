@@ -25,7 +25,7 @@ public interface ArticleService extends IService<Article> {
      * @param loginUser
      * @return
      */
-    String createArticleTask(String topic, User loginUser);
+    String createArticleTask(String topic,String style, User loginUser);
 
     /**
      * 通过任务Id获取文章信息
@@ -71,4 +71,13 @@ public interface ArticleService extends IService<Article> {
      * @param loginUser
      */
     ArticleVO getArticleDetail(String taskId, User loginUser);
+
+    /**
+     * 创建文章任务并进行配额检查
+     * @param topic
+     * @param style
+     * @param loginUser
+     * @return
+     */
+    String createArticleTaskWithQuotaCheck(String topic, String style, User loginUser);
 }

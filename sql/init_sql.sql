@@ -81,3 +81,8 @@ create table if not exists article
     INDEX idx_userId_status (userId, status)
     ) comment '文章表' collate = utf8mb4_unicode_ci;
 
+-- 为 article 表添加 style 字段（文章风格）
+ALTER TABLE article
+    ADD COLUMN style VARCHAR(20) NULL COMMENT '文章风格：tech/emotional/educational/humorous' AFTER topic;
+
+

@@ -1,4 +1,4 @@
-package com.xuxiaojian.aipassagecreator.service.impl;
+package com.xuxiaojian.aipassagecreator.service;
 
 
 import com.qcloud.cos.COSClient;

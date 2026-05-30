@@ -1,10 +1,9 @@
-package com.xuxiaojian.aipassagecreator.service.impl;
+package com.xuxiaojian.aipassagecreator.service;
 
 import com.xuxiaojian.aipassagecreator.manager.SseEmitterManager;
 import com.xuxiaojian.aipassagecreator.model.dto.article.ArticleState;
 import com.xuxiaojian.aipassagecreator.model.enums.ArticleStatusEnum;
 import com.xuxiaojian.aipassagecreator.model.enums.SseMessageTypeEnum;
-import com.xuxiaojian.aipassagecreator.service.ArticleService;
 import com.xuxiaojian.aipassagecreator.utils.GsonUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,7 +37,7 @@ public class ArticleAsyncService {
     private ArticleService articleService;
 
     @Async("articleExecutor")
-    public void executeArticleGeneration(String taskId,String topic) {
+    public void executeArticleGeneration(String taskId, String topic, String style, List<String> enabledImageMethods) {
         log.info("异步任务开始,taskId={},topic={}",taskId,topic);
 
         try {
@@ -46,6 +46,8 @@ public class ArticleAsyncService {
             ArticleState state = new ArticleState();
             state.setTaskId(taskId);
             state.setTopic(topic);
+            state.setStyle(style);
+            state.setEnabledImageMethods(enabledImageMethods);
 
             //执行智能体异步编排，并通过SSE推送进度
             articleAgentService.executeArticleGeneration(state,message -> {

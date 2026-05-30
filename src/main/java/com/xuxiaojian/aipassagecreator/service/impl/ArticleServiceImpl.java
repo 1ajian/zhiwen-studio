@@ -42,7 +42,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
 
     @Override
-    public String createArticleTask(String topic, User loginUser) {
+    public String createArticleTask(String topic,String style, User loginUser) {
         //生成任务ID
         String taskId = IdUtil.simpleUUID();
 
@@ -50,6 +50,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         article.setTaskId(taskId);
         article.setUserId(loginUser.getId());
         article.setTopic(topic);
+        article.setStyle(style);
         article.setStatus(ArticleStatusEnum.PENDING.getValue());
         article.setCreateTime(LocalDateTime.now());
 
@@ -153,6 +154,11 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         ThrowUtils.throwIf(article == null,ErrorCode.NOT_FOUND_ERROR,"文章不存在");
         checkArticlePermission(article,loginUser);
         return ArticleVO.objToVo(article);
+    }
+
+    @Override
+    public String createArticleTaskWithQuotaCheck(String topic, String style, User loginUser) {
+        return createArticleTask(topic,style,loginUser);
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.xuxiaojian.aipassagecreator.service.impl;
+package com.xuxiaojian.aipassagecreator.service.strategy.impl;
 
 /**
  * ClassName: PexelsService
@@ -16,7 +16,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.xuxiaojian.aipassagecreator.config.PexelsConfig;
 import com.xuxiaojian.aipassagecreator.model.enums.ImageMethodEnum;
-import com.xuxiaojian.aipassagecreator.service.ImageSearchService;
+import com.xuxiaojian.aipassagecreator.service.strategy.ImageSearchService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;

@@ -11,10 +11,11 @@ import com.xuxiaojian.aipassagecreator.manager.SseEmitterManager;
 import com.xuxiaojian.aipassagecreator.model.dto.article.ArticleCreateRequest;
 import com.xuxiaojian.aipassagecreator.model.dto.article.ArticleQueryRequest;
 import com.xuxiaojian.aipassagecreator.model.entity.User;
+import com.xuxiaojian.aipassagecreator.model.enums.ArticleStyleEnum;
 import com.xuxiaojian.aipassagecreator.model.vo.ArticleVO;
 import com.xuxiaojian.aipassagecreator.service.ArticleService;
 import com.xuxiaojian.aipassagecreator.service.UserService;
-import com.xuxiaojian.aipassagecreator.service.impl.ArticleAsyncService;
+import com.xuxiaojian.aipassagecreator.service.ArticleAsyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -56,12 +57,14 @@ public class ArticleController {
         ThrowUtils.throwIf(request.getTopic() == null || request.getTopic().trim().isEmpty(),
                 ErrorCode.PARAMS_ERROR,"选题不能为空");
 
+        ThrowUtils.throwIf(!ArticleStyleEnum.isValid(request.getStyle()),ErrorCode.PARAMS_ERROR,"无效的文章风格");
+
         User loginUser = userService.getLoginUser(httpServletRequest);
 
-        String taskId = articleService.createArticleTask(request.getTopic(), loginUser);
+        String taskId = articleService.createArticleTask(request.getTopic(),request.getStyle(), loginUser);
 
         //异步执行生成文章
-        articleAsyncService.executeArticleGeneration(taskId,request.getTopic());
+        articleAsyncService.executeArticleGeneration(taskId,request.getTopic(),request.getStyle(),request.getEnabledImageMethods());
 
         return ResultUtils.success(taskId);
     }
