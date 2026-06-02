@@ -52,6 +52,16 @@ public class Article implements Serializable {
     private String topic;
 
     /**
+     * 用户补充描述
+     */
+    private String userDescription;
+
+    /**
+     * 允许的配图方式列表（JSON格式）
+     */
+    private String enabledImageMethods;
+
+    /**
      * 文章风格：tech/emotional/educational/humorous
      */
     private String style;
@@ -65,6 +75,16 @@ public class Article implements Serializable {
      * 副标题
      */
     private String subTitle;
+
+    /**
+     * 标题方案列表（JSON格式）
+     */
+    private String titleOptions;
+
+    /**
+     * 当前阶段：PENDING/TITLE_GENERATING/TITLE_SELECTING/OUTLINE_GENERATING/OUTLINE_EDITING/CONTENT_GENERATING
+     */
+    private String phase;
 
     /**
      * 大纲（JSON格式）

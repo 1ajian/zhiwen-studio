@@ -73,6 +73,29 @@ public class ArticleState implements Serializable {
      */
     private String fullContent;
 
+    /**
+     * 用户补充描述
+     */
+    private String userDescription;
+
+    /**
+     * 当前阶段
+     */
+    private String phase;
+
+    /**
+     * 标题方案列表（智能体1输出）
+     */
+    private List<TitleOption> titleOptions;
+
+    /**
+     * 标题方案
+     */
+    @Data
+    public static class TitleOption implements Serializable {
+        private String mainTitle;
+        private String subTitle;
+    }
 
 
     /**

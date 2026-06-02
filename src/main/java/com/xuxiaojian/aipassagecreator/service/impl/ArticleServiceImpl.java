@@ -3,10 +3,12 @@ package com.xuxiaojian.aipassagecreator.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import com.google.gson.reflect.TypeToken;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.xuxiaojian.aipassagecreator.constant.UserConstant;
+import com.xuxiaojian.aipassagecreator.exception.BusinessException;
 import com.xuxiaojian.aipassagecreator.exception.ErrorCode;
 import com.xuxiaojian.aipassagecreator.exception.ThrowUtils;
 import com.xuxiaojian.aipassagecreator.mapper.ArticleMapper;
@@ -14,10 +16,13 @@ import com.xuxiaojian.aipassagecreator.model.dto.article.ArticleQueryRequest;
 import com.xuxiaojian.aipassagecreator.model.dto.article.ArticleState;
 import com.xuxiaojian.aipassagecreator.model.entity.Article;
 import com.xuxiaojian.aipassagecreator.model.entity.User;
+import com.xuxiaojian.aipassagecreator.model.enums.ArticlePhaseEnum;
 import com.xuxiaojian.aipassagecreator.model.enums.ArticleStatusEnum;
 import com.xuxiaojian.aipassagecreator.model.vo.ArticleVO;
+import com.xuxiaojian.aipassagecreator.service.ArticleAgentService;
 import com.xuxiaojian.aipassagecreator.service.ArticleService;
 import com.xuxiaojian.aipassagecreator.utils.GsonUtils;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +45,13 @@ import static com.xuxiaojian.aipassagecreator.constant.UserConstant.ADMIN_ROLE;
 @Slf4j
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
 
+
+    @Resource
+    private ArticleAgentService articleAgentService;
+
+    public ArticleServiceImpl(ArticleAgentService articleAgentService) {
+        this.articleAgentService = articleAgentService;
+    }
 
     @Override
     public String createArticleTask(String topic,String style, User loginUser) {
@@ -159,6 +171,101 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Override
     public String createArticleTaskWithQuotaCheck(String topic, String style, User loginUser) {
         return createArticleTask(topic,style,loginUser);
+    }
+
+    @Override
+    public void confirmTitle(String taskId, String mainTitle, String subTitle, String userDescription, User loginUser) {
+        Article article = getByTaskId(taskId);
+        ThrowUtils.throwIf(article == null,ErrorCode.NOT_FOUND_ERROR,"文章不存在");
+
+        //校验权限
+        checkArticlePermission(article,loginUser);
+
+        //校验当前阶段（必须是 TITLE_SELECTING）
+        ArticlePhaseEnum currentPhase = ArticlePhaseEnum.getByValue(article.getPhase());
+        ThrowUtils.throwIf(currentPhase != ArticlePhaseEnum.TITLE_SELECTING,ErrorCode.OPERATION_ERROR,"当前阶段不允许此操作");
+
+        //保存用户选择的标题和补充描述
+        article.setMainTitle(mainTitle);
+        article.setSubTitle(subTitle);
+        article.setUserDescription(userDescription);
+        article.setPhase(ArticlePhaseEnum.OUTLINE_GENERATING.getValue());
+
+        this.updateById(article);
+        log.info("用户确认标题,taskId={},mainTitle={}",taskId,mainTitle);
+    }
+
+    @Override
+    public void confirmOutline(String taskId, List<ArticleState.OutlineSection> outline, User loginUser) {
+        Article article = getByTaskId(taskId);
+        ThrowUtils.throwIf(article == null,ErrorCode.NOT_FOUND_ERROR,"文章不存在");
+
+        // 校验权限
+        checkArticlePermission(article,loginUser);
+
+        // 校验当前阶段 (必须是OUTLINE_EDITING 等待编辑大纲)
+        ArticlePhaseEnum currentPhase = ArticlePhaseEnum.getByValue(article.getPhase());
+        ThrowUtils.throwIf(currentPhase != ArticlePhaseEnum.OUTLINE_EDITING,ErrorCode.OPERATION_ERROR,"当前阶段不允许此操作");
+
+        //保存用户编辑后的大纲
+        article.setOutline(GsonUtils.toJson(outline));
+        article.setPhase(ArticlePhaseEnum.CONTENT_GENERATING.getValue());
+
+        this.updateById(article);
+        log.info("用户确认大纲,taskId={},sectionsCount={}",taskId,outline.size());
+    }
+
+    @Override
+    public void updatePhase(String taskId, ArticlePhaseEnum phase) {
+        Article article = getByTaskId(taskId);
+        if (article == null) {
+            log.error("文章记录不存在,taskId={}",taskId);
+            return;
+        }
+
+        article.setPhase(phase.getValue());
+        this.updateById(article);
+        log.info("文章阶段已更新,taskId={},phase={}",taskId,phase.getValue());
+    }
+
+    @Override
+    public void saveTitleOptions(String taskId, List<ArticleState.TitleOption> titleOptions) {
+        Article article = getByTaskId(taskId);
+        if (article == null) {
+            log.error("文章记录不存在,taskId= {}",taskId);
+            return;
+        }
+
+        article.setTitleOptions(GsonUtils.toJson(titleOptions));
+        this.updateById(article);
+        log.info("标题方案已保存,taskId={},optionsCount={}",taskId,titleOptions.size());
+    }
+
+    @Override
+    public List<ArticleState.OutlineSection> aiModifyOutline(String taskId, String modifySuggestion, User loginUser) {
+        Article article = getByTaskId(taskId);
+        if (article == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"文章不存在");
+        }
+
+        //校验权限
+        checkArticlePermission(article,loginUser);
+
+        //校验当前阶段（必须是 OUTLINE_EDITING）
+        ArticlePhaseEnum currentPhase = ArticlePhaseEnum.getByValue(article.getPhase());
+        ThrowUtils.throwIf(currentPhase != ArticlePhaseEnum.OUTLINE_EDITING,ErrorCode.OPERATION_ERROR,"当前阶段不允许此操作");
+
+        //获取当前大纲
+        List<ArticleState.OutlineSection> currentOutline = GsonUtils.fromJson(article.getOutline(), new TypeToken<List<ArticleState.OutlineSection>>() {});
+
+        //调用AI修改大纲
+        List<ArticleState.OutlineSection> modifyOutline = articleAgentService.aiModifyOutline(article.getMainTitle(),article.getSubTitle(),currentOutline,modifySuggestion);
+
+        article.setOutline(GsonUtils.toJson(modifyOutline));
+        this.updateById(article);
+
+        log.info("AI修改大纲完成,taskId = {},sectionsCount={}",taskId,modifyOutline.size());
+        return modifyOutline;
     }
 
     /**

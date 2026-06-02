@@ -6,8 +6,11 @@ import com.xuxiaojian.aipassagecreator.model.dto.article.ArticleQueryRequest;
 import com.xuxiaojian.aipassagecreator.model.dto.article.ArticleState;
 import com.xuxiaojian.aipassagecreator.model.entity.Article;
 import com.xuxiaojian.aipassagecreator.model.entity.User;
+import com.xuxiaojian.aipassagecreator.model.enums.ArticlePhaseEnum;
 import com.xuxiaojian.aipassagecreator.model.enums.ArticleStatusEnum;
 import com.xuxiaojian.aipassagecreator.model.vo.ArticleVO;
+
+import java.util.List;
 
 /**
  * ClassName: ArticleService
@@ -25,7 +28,7 @@ public interface ArticleService extends IService<Article> {
      * @param loginUser
      * @return
      */
-    String createArticleTask(String topic,String style, User loginUser);
+    String createArticleTask(String topic,String style,User loginUser);
 
     /**
      * 通过任务Id获取文章信息
@@ -80,4 +83,45 @@ public interface ArticleService extends IService<Article> {
      * @return
      */
     String createArticleTaskWithQuotaCheck(String topic, String style, User loginUser);
+
+    /**
+     * 确定标题（用户选择后）
+     * @param taskId 任务ID
+     * @param mainTitle 主标题
+     * @param subTitle 副标题
+     * @param userDescription 用户补充描述
+     * @param loginUser 当前登录用户
+     */
+    void confirmTitle(String taskId,String mainTitle,String subTitle,String userDescription,User loginUser);
+
+    /**
+     * 确认大纲（用户编辑后）
+     * @param taskId 任务ID
+     * @param outline 用户编辑后大纲
+     * @param loginUser 当前登录用户
+     */
+    void confirmOutline(String taskId, List<ArticleState.OutlineSection> outline,User loginUser);
+
+    /**
+     * 更新阶段
+     * @param taskId 任务ID
+     * @param phase 阶段
+     */
+    void updatePhase(String taskId, ArticlePhaseEnum phase);
+
+    /**
+     * 保存标题方案
+     * @param taskId 任务ID
+     * @param titleOptions 标题方案列表
+     */
+    void saveTitleOptions(String taskId,List<ArticleState.TitleOption> titleOptions);
+
+    /**
+     * AI 修改大纲
+     * @param taskId 任务ID
+     * @param modifySuggestion 用户修改建议
+     * @param loginUser 当前登录用户
+     * @return
+     */
+    List<ArticleState.OutlineSection> aiModifyOutline(String taskId,String modifySuggestion,User loginUser);
 }
