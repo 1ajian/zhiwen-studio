@@ -28,7 +28,7 @@ public interface ArticleService extends IService<Article> {
      * @param loginUser
      * @return
      */
-    String createArticleTask(String topic,String style,User loginUser);
+    String createArticleTask(String topic,String style,List<String> enabledImageMethods,User loginUser);
 
     /**
      * 通过任务Id获取文章信息
@@ -82,7 +82,7 @@ public interface ArticleService extends IService<Article> {
      * @param loginUser
      * @return
      */
-    String createArticleTaskWithQuotaCheck(String topic, String style, User loginUser);
+    String createArticleTaskWithQuotaCheck(String topic, String style,List<String> enabledImageMethods, User loginUser);
 
     /**
      * 确定标题（用户选择后）

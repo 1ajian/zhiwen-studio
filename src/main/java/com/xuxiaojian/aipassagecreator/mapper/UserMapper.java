@@ -3,6 +3,8 @@ package com.xuxiaojian.aipassagecreator.mapper;
 import com.mybatisflex.core.BaseMapper;
 import com.xuxiaojian.aipassagecreator.model.entity.User;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 /**
  * ClassName: UserMapper
@@ -15,4 +17,10 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
+
+    @Update("UPDATE user SET quota = quota - 1 WHERE id = #{userId} AND quota > 0")
+    int decrementQuota(Long userId);
+
+    @Update("UPDATE user SET vipTime = null , userRole = 'user' WHERE id = #{user.id}")
+    Integer refundUpdateUser(@Param("user") User updateUser);
 }

@@ -54,4 +54,14 @@ public class User implements Serializable {
 
     @Column(isLogicDelete = true)
     private Integer isDelete;
+
+    /**
+     * 成为会员时间
+     */
+    private LocalDateTime vipTime;
+
+    /**
+     * 剩余配额
+     */
+    private Integer quota;
 }

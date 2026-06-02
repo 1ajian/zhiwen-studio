@@ -141,5 +141,6 @@ public class Article implements Serializable {
      */
     @Column(isLogicDelete = true)
     private Integer isDelete;
+
 }
 

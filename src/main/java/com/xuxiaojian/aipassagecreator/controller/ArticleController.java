@@ -1,7 +1,6 @@
 package com.xuxiaojian.aipassagecreator.controller;
 
 import com.mybatisflex.core.paginate.Page;
-import com.xuxiaojian.aipassagecreator.annotation.AuthCheck;
 import com.xuxiaojian.aipassagecreator.common.BaseResponse;
 import com.xuxiaojian.aipassagecreator.common.DeleteRequest;
 import com.xuxiaojian.aipassagecreator.common.ResultUtils;
@@ -9,14 +8,12 @@ import com.xuxiaojian.aipassagecreator.exception.ErrorCode;
 import com.xuxiaojian.aipassagecreator.exception.ThrowUtils;
 import com.xuxiaojian.aipassagecreator.manager.SseEmitterManager;
 import com.xuxiaojian.aipassagecreator.model.dto.article.*;
-import com.xuxiaojian.aipassagecreator.model.entity.Article;
 import com.xuxiaojian.aipassagecreator.model.entity.User;
 import com.xuxiaojian.aipassagecreator.model.enums.ArticleStyleEnum;
 import com.xuxiaojian.aipassagecreator.model.vo.ArticleVO;
 import com.xuxiaojian.aipassagecreator.service.ArticleAsyncService;
 import com.xuxiaojian.aipassagecreator.service.ArticleService;
 import com.xuxiaojian.aipassagecreator.service.UserService;
-import com.xuxiaojian.aipassagecreator.utils.GsonUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -64,12 +61,10 @@ public class ArticleController {
 
         User loginUser = userService.getLoginUser(httpServletRequest);
 
-        String taskId = articleService.createArticleTask(request.getTopic(),request.getStyle(), loginUser);
+        String taskId = articleService.createArticleTaskWithQuotaCheck(request.getTopic(),request.getStyle(),
+                request.getEnabledImageMethods(),
+                loginUser);
 
-        //先这样做 后续会改
-        Article article = articleService.getByTaskId(taskId);
-        article.setEnabledImageMethods(GsonUtils.toJson(request.getEnabledImageMethods()));
-        articleService.updateById(article);
         //异步执行生成文章
 //        articleAsyncService.executeArticleGeneration(taskId,request.getTopic(),
 //                request.getStyle(),
@@ -99,7 +94,6 @@ public class ArticleController {
 
     @GetMapping("/{taskId}")
     @Operation(summary = "获取文章详情")
-    @AuthCheck(mustRole = "user")
     public BaseResponse<ArticleVO> getArticle(@PathVariable String taskId,HttpServletRequest request) {
         ThrowUtils.throwIf(taskId == null || taskId.trim().isEmpty(),ErrorCode.PARAMS_ERROR,"任务ID不能为空");
         User loginUser = userService.getLoginUser(request);
@@ -109,7 +103,6 @@ public class ArticleController {
 
     @PostMapping("/list")
     @Operation(summary = "分页查询文章列表")
-    @AuthCheck(mustRole = "user")
     public BaseResponse<Page<ArticleVO>> listArticle(@RequestBody ArticleQueryRequest request,
                                                      HttpServletRequest httpServletRequest) {
         User loginUser = userService.getLoginUser(httpServletRequest);
@@ -120,7 +113,6 @@ public class ArticleController {
 
     @PostMapping("/delete")
     @Operation(summary = "删除文章")
-    @AuthCheck(mustRole = "user")
     public BaseResponse<Boolean> deleteArticle(@RequestBody DeleteRequest deleteRequest,HttpServletRequest httpServletRequest) {
         ThrowUtils.throwIf(deleteRequest == null || deleteRequest.getId() == null,ErrorCode.PARAMS_ERROR);
         User loginUser = userService.getLoginUser(httpServletRequest);
@@ -128,7 +120,7 @@ public class ArticleController {
         return ResultUtils.success(result);
     }
 
-    @PostMapping("/confirm_title")
+    @PostMapping("/confirm-title")
     @Operation(summary = "确认标题并输入补充描述")
     public BaseResponse<Void> confirmTitle(@RequestBody ArticleConfirmTitleRequest request,HttpServletRequest httpServletRequest) {
         ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);

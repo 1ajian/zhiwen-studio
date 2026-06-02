@@ -18,13 +18,16 @@ import com.xuxiaojian.aipassagecreator.model.entity.Article;
 import com.xuxiaojian.aipassagecreator.model.entity.User;
 import com.xuxiaojian.aipassagecreator.model.enums.ArticlePhaseEnum;
 import com.xuxiaojian.aipassagecreator.model.enums.ArticleStatusEnum;
+import com.xuxiaojian.aipassagecreator.model.enums.ImageMethodEnum;
 import com.xuxiaojian.aipassagecreator.model.vo.ArticleVO;
 import com.xuxiaojian.aipassagecreator.service.ArticleAgentService;
 import com.xuxiaojian.aipassagecreator.service.ArticleService;
+import com.xuxiaojian.aipassagecreator.service.QuotaService;
 import com.xuxiaojian.aipassagecreator.utils.GsonUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,13 +51,17 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Resource
     private ArticleAgentService articleAgentService;
-
-    public ArticleServiceImpl(ArticleAgentService articleAgentService) {
-        this.articleAgentService = articleAgentService;
-    }
+    @Resource
+    private QuotaService quotaService;
 
     @Override
-    public String createArticleTask(String topic,String style, User loginUser) {
+    public String createArticleTask(String topic,String style,List<String> enabledImageMethods, User loginUser) {
+        //处理配图方式，如果用户未选择，给普通用户设置默认的非VIP方式
+        List<String> finalImageMethods = processImageMethods(enabledImageMethods,loginUser);
+
+        // 校验配图方式权限（普通用户不能使用 NANO_BANANA 和 SVG_DIAGRAM）
+        validateImageMethods(finalImageMethods,loginUser);
+
         //生成任务ID
         String taskId = IdUtil.simpleUUID();
 
@@ -65,12 +72,14 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         article.setStyle(style);
         article.setStatus(ArticleStatusEnum.PENDING.getValue());
         article.setCreateTime(LocalDateTime.now());
+        article.setEnabledImageMethods(GsonUtils.toJson(finalImageMethods));
 
         this.save(article);
 
         log.info("文章任务已创建,taskId={},userId={}",taskId,loginUser.getId());
         return taskId;
     }
+
 
     @Override
     public Article getByTaskId(String taskId) {
@@ -169,8 +178,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     @Override
-    public String createArticleTaskWithQuotaCheck(String topic, String style, User loginUser) {
-        return createArticleTask(topic,style,loginUser);
+    @Transactional(rollbackFor = Exception.class)
+    public String createArticleTaskWithQuotaCheck(String topic, String style,List<String> enabledImageMethods, User loginUser) {
+        quotaService.checkAndConsumeQuota(loginUser);
+        return createArticleTask(topic,style,enabledImageMethods,loginUser);
     }
 
     @Override
@@ -248,6 +259,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"文章不存在");
         }
 
+        ThrowUtils.throwIf(!isVipOrAdmin(loginUser),ErrorCode.NO_AUTH_ERROR,"AI修改大纲功能仅限 VIP 会员使用");
+
         //校验权限
         checkArticlePermission(article,loginUser);
 
@@ -299,5 +312,42 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         articleVOPage.setRecords(articleVOList);
         return articleVOPage;
+    }
+
+
+    private void validateImageMethods(List<String> enabledImageMethods, User loginUser) {
+        if (enabledImageMethods == null || enabledImageMethods.isEmpty()) {
+            return;
+        }
+
+        if (isVipOrAdmin(loginUser)) {
+            return;
+        }
+
+        for (String method : enabledImageMethods) {
+            if (ImageMethodEnum.NANO_BANANA.getValue().equals(method) || ImageMethodEnum.SVG_DIAGRAM.getValue().equals(method)) {
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR,"高级配图功能(AI生图、SVG图标)仅限VIP会员使用");
+            }
+        }
+    }
+
+    private List<String> processImageMethods(List<String> enabledImageMethods,User loginUser) {
+        if (enabledImageMethods != null && !enabledImageMethods.isEmpty()) {
+            return enabledImageMethods;
+        }
+
+        if (isVipOrAdmin(loginUser)) {
+            return null;
+        }
+
+        return List.of(ImageMethodEnum.PEXELS.getValue(),
+                ImageMethodEnum.MERMAID.getValue(),
+                ImageMethodEnum.ICONIFY.getValue(),
+                ImageMethodEnum.EMOJI_PACK.getValue());
+    }
+
+    private boolean isVipOrAdmin(User loginUser) {
+        String userRole = loginUser.getUserRole();
+        return UserConstant.VIP_ROLE.equals(userRole) || ADMIN_ROLE.equals(userRole);
     }
 }

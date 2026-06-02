@@ -1,7 +1,5 @@
 package com.xuxiaojian.aipassagecreator.model.vo;
 
-import cn.hutool.core.date.DatePattern;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -24,9 +22,14 @@ public class LoginUserVO implements Serializable {
     private String userAvatar;
     private String userProfile;
     private String userRole;
-//    @JsonFormat(pattern = DatePattern.NORM_DATETIME_PATTERN)
     private LocalDateTime createTime;
-//    @JsonFormat(pattern = DatePattern.NORM_DATETIME_PATTERN)
     private LocalDateTime updateTime;
+    /**
+     * 成为会员时间
+     */
+    private LocalDateTime vipTime;
+
+    private Integer quota;
+
 }
 
