@@ -7,6 +7,7 @@ import com.stripe.model.Refund;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.RefundCreateParams;
+import com.stripe.param.RefundListParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import com.xuxiaojian.aipassagecreator.config.StripeConfig;
 import com.xuxiaojian.aipassagecreator.constant.UserConstant;
@@ -23,6 +24,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -53,6 +55,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Resource
     private PaymentRecordMapper paymentRecordMapper;
+
+    @Resource
+    private TransactionTemplate transactionTemplate;
 
     /**
      * 创建 VIP 支付会话
@@ -107,7 +112,7 @@ public class PaymentServiceImpl implements PaymentService {
      * @throws StripeException
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    //@Transactional(rollbackFor = Exception.class)
     public boolean handleRefund(Long userId, String reason) throws StripeException {
         User user = getUserById(userId);
         validateUserIsVip(user);
@@ -120,17 +125,45 @@ public class PaymentServiceImpl implements PaymentService {
         if (paymentRecord.getStripePaymentIntentId() == null) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR,"支付记录无效");
         }
-        
-        Refund refund = createStripeRefund(paymentRecord.getStripePaymentIntentId());
+
+        String stripePaymentIntentId = paymentRecord.getStripePaymentIntentId();
+        //当前支付记录是否已经退款
+        Refund alreadyRefund = findSucceededRefundByPaymentIntent(stripePaymentIntentId);
+        if (alreadyRefund != null) {
+            //已经退款
+            updateRefundRecord(paymentRecord.getId(),reason + ",补偿退款");
+            revokeVipStatus(userId);
+            return true;
+        }
+
+        Refund refund = createStripeRefund(stripePaymentIntentId);
         if (!"succeeded".equals(refund.getStatus())) {
             return false;
         }
-        
-        updateRefundRecord(paymentRecord.getId(),reason);
-        revokeVipStatus(userId);
+
+        //编程式事务
+        transactionTemplate.execute(status -> {
+            updateRefundRecord(paymentRecord.getId(), reason);
+            revokeVipStatus(userId);
+            return true;
+        });
         
         log.info("退款成功,已取消 VIP 身份,userId = {},refundId = {}",userId,refund.getId());
         return true;
+    }
+
+    private Refund findSucceededRefundByPaymentIntent(String stripePaymentIntentId) throws StripeException {
+        RefundListParams params = RefundListParams.builder()
+                .setPaymentIntent(stripePaymentIntentId)
+                .setLimit(10L)
+                .build();
+
+        for (Refund refund : Refund.list(params).getData()) {
+            if ("succeeded".equals(refund.getStatus())) {
+                return refund;
+            }
+        }
+        return null;
     }
 
 
@@ -294,11 +327,15 @@ public class PaymentServiceImpl implements PaymentService {
      * @param userId
      */
     private void revokeVipStatus(Long userId) {
-        User updateUser = new User();
-        updateUser.setId(userId);
-        updateUser.setVipTime(null);
-        updateUser.setUserRole(UserConstant.DEFAULT_ROLE);
-        userMapper.refundUpdateUser(updateUser);
+        User user = userMapper.selectOneById(userId);
+        String userRole = user.getUserRole();
+        if (userRole.equals(UserConstant.VIP_ROLE)) {
+            User updateUser = new User();
+            updateUser.setId(userId);
+            updateUser.setVipTime(null);
+            updateUser.setUserRole(UserConstant.DEFAULT_ROLE);
+            userMapper.refundUpdateUser(updateUser);
+        }
     }
 
     /**
@@ -307,12 +344,15 @@ public class PaymentServiceImpl implements PaymentService {
      * @param reason
      */
     private void updateRefundRecord(Long recordId, String reason) {
-        PaymentRecord updateRecord = new PaymentRecord();
-        updateRecord.setId(recordId);
-        updateRecord.setStatus(PaymentStatusEnum.REFUNDED.getValue());
-        updateRecord.setRefundTime(LocalDateTime.now());
-        updateRecord.setRefundReason(reason);
-        paymentRecordMapper.update(updateRecord);
+        PaymentRecord paymentRecord = paymentRecordMapper.selectOneById(recordId);
+        if (paymentRecord.getStatus().equals("SUCCEEDED")) {
+            PaymentRecord updateRecord = new PaymentRecord();
+            updateRecord.setId(recordId);
+            updateRecord.setStatus(PaymentStatusEnum.REFUNDED.getValue());
+            updateRecord.setRefundTime(LocalDateTime.now());
+            updateRecord.setRefundReason(reason);
+            paymentRecordMapper.update(updateRecord);
+        }
     }
 
     /**
