@@ -73,3 +73,13 @@ svg-diagram:
   default-width: 800
   default-height: 600
   folder: svg-diagrams  # COS 存储文件夹
+
+payment:
+  refund:
+    compensation:
+      channel: payment:refund:compensate
+      max-redis-retry: 3
+      redis-retry-delays: [1,2,3]
+      redis-scheduler-delay: 20000
+      processing-timeout-minutes: 1
+      event-ttl-days: 2

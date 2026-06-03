@@ -21,6 +21,22 @@ public class NanoBananaConfig {
     private String apiKey;
 
     /**
+     * 是否为 Nano Banana 单独启用代理。
+     * 启用后仅当前 Google GenAI 客户端走代理，不影响进程内其他 HTTP 请求。
+     */
+    private Boolean proxyEnabled = true;
+
+    /**
+     * Nano Banana 专用代理主机。
+     */
+    private String proxyHost = "127.0.0.1";
+
+    /**
+     * Nano Banana 专用代理端口。
+     */
+    private Integer proxyPort = 7892;
+
+    /**
      * 模型名称
      * gemini-2.5-flash-image: 速度快，适合高吞吐低延迟
      * gemini-3-pro-image-preview: 专业级，支持高级推理和高分辨率

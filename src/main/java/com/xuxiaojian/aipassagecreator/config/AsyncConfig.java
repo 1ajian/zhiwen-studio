@@ -41,6 +41,29 @@ public class AsyncConfig {
         executor.setAwaitTerminationSeconds(60);
         //等待所有任务完成后关闭线程池
         executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.initialize();
+        return executor;
+    }
+
+    /**
+     * 退款补偿异步线程池。
+     * 退款补偿与文章生成分开，避免文章生成高峰拖慢支付补偿链路。
+     *
+     * @return 退款补偿线程池
+     */
+    @Bean(name = "refundCompensationTaskExecutor")
+    public Executor refundCompensationExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(4);
+        executor.setQueueCapacity(50);
+        executor.setKeepAliveSeconds(60);
+        executor.setThreadNamePrefix("refund-compensation-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setThreadFactory(Executors.defaultThreadFactory());
+        executor.setAwaitTerminationSeconds(60);
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.initialize();
         return executor;
     }
 }

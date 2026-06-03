@@ -1,7 +1,13 @@
 package com.xuxiaojian.aipassagecreator.service.strategy.impl;
 
 import com.google.genai.Client;
-import com.google.genai.types.*;
+import com.google.genai.types.ClientOptions;
+import com.google.genai.types.GenerateContentConfig;
+import com.google.genai.types.GenerateContentResponse;
+import com.google.genai.types.ImageConfig;
+import com.google.genai.types.Part;
+import com.google.genai.types.ProxyOptions;
+import com.google.genai.types.ProxyType;
 import com.xuxiaojian.aipassagecreator.config.NanoBananaConfig;
 import com.xuxiaojian.aipassagecreator.constant.ArticleConstant;
 import com.xuxiaojian.aipassagecreator.model.dto.image.ImageData;
@@ -46,10 +52,7 @@ public class NanoBananaService implements ImageSearchService {
      */
     private ImageData generateImageData(String prompt) {
         try {
-            // 使用 Builder 显示设置API Key
-            Client genaiClient = Client.builder()
-                    .apiKey(nanoBananaConfig.getApiKey())
-                    .build();
+            Client genaiClient = createGenaiClient();
 
             try {
                 // 构建图片配置
@@ -116,6 +119,41 @@ public class NanoBananaService implements ImageSearchService {
 
     @Override
     public boolean isAvailable() {
-        return false;
+        return true;
+    }
+
+    /**
+     * 创建 Google GenAI 客户端。
+     * 启用专用代理时，仅当前 Nano Banana 客户端走代理，避免影响其他 HTTP 请求。
+     *
+     * @return Google GenAI 客户端
+     */
+    private Client createGenaiClient() {
+        Client.Builder builder = Client.builder()
+                .apiKey(nanoBananaConfig.getApiKey());
+
+        if (!Boolean.TRUE.equals(nanoBananaConfig.getProxyEnabled())) {
+            log.info("Nano Banana 未启用专用代理，将直接请求 Google GenAI 接口");
+            return builder.build();
+        }
+
+        String proxyHost = nanoBananaConfig.getProxyHost();
+        Integer proxyPort = nanoBananaConfig.getProxyPort();
+        if (proxyHost == null || proxyHost.isBlank() || proxyPort == null) {
+            throw new IllegalStateException("Nano Banana 已启用专用代理，但 proxyHost 或 proxyPort 未正确配置");
+        }
+
+        ProxyOptions proxyOptions = ProxyOptions.builder()
+                .type(ProxyType.Known.HTTP)
+                .host(proxyHost)
+                .port(proxyPort)
+                .build();
+
+        ClientOptions clientOptions = ClientOptions.builder()
+                .proxyOptions(proxyOptions)
+                .build();
+
+        log.info("Nano Banana 已启用专用代理: type=HTTP, host={}, port={}", proxyHost, proxyPort);
+        return builder.clientOptions(clientOptions).build();
     }
 }

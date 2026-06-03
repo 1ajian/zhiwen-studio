@@ -119,6 +119,29 @@ CREATE TABLE IF NOT EXISTS payment_record (
     INDEX idx_createTime (createTime)
     ) COMMENT '支付记录表' COLLATE = utf8mb4_unicode_ci;
 
+-- 创建退款补偿失败任务表
+CREATE TABLE IF NOT EXISTS refund_compensation_task (
+                                                        id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
+                                                        eventId VARCHAR(64) NOT NULL COMMENT '事件ID',
+    userId BIGINT NOT NULL COMMENT '用户ID',
+    paymentRecordId BIGINT NOT NULL COMMENT '支付记录ID',
+    stripePaymentIntentId VARCHAR(128) NOT NULL COMMENT 'Stripe支付意向ID',
+    reason VARCHAR(512) NOT NULL COMMENT '退款原因',
+    source VARCHAR(64) NOT NULL COMMENT '事件来源',
+    status VARCHAR(32) NOT NULL COMMENT '状态：PENDING/PROCESSING/SUCCESS/FAILED',
+    retryCount INT DEFAULT 0 NOT NULL COMMENT '数据库补偿重试次数',
+    nextRetryTime DATETIME NULL COMMENT '下次重试时间',
+    lastError VARCHAR(512) NULL COMMENT '最近一次错误信息',
+    processingStartTime DATETIME NULL COMMENT '开始处理时间',
+    createTime DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updateTime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    UNIQUE KEY uk_eventId (eventId),
+    INDEX idx_status_nextRetryTime (status, nextRetryTime),
+    INDEX idx_paymentRecordId (paymentRecordId),
+    INDEX idx_userId (userId)
+    ) COMMENT '退款补偿失败任务表' COLLATE = utf8mb4_unicode_ci;
+
 -- 添加 quota 字段（如果不存在）
 ALTER TABLE user ADD COLUMN quota int default 5 not null comment '剩余配额' AFTER userRole;
 
