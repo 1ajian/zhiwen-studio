@@ -10,7 +10,9 @@ import com.xuxiaojian.aipassagecreator.manager.SseEmitterManager;
 import com.xuxiaojian.aipassagecreator.model.dto.article.*;
 import com.xuxiaojian.aipassagecreator.model.entity.User;
 import com.xuxiaojian.aipassagecreator.model.enums.ArticleStyleEnum;
+import com.xuxiaojian.aipassagecreator.model.vo.AgentExecutionStats;
 import com.xuxiaojian.aipassagecreator.model.vo.ArticleVO;
+import com.xuxiaojian.aipassagecreator.service.AgentLogService;
 import com.xuxiaojian.aipassagecreator.service.ArticleAsyncService;
 import com.xuxiaojian.aipassagecreator.service.ArticleService;
 import com.xuxiaojian.aipassagecreator.service.UserService;
@@ -49,6 +51,9 @@ public class ArticleController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private AgentLogService agentLogService;
 
     @PostMapping("/create")
     @Operation(summary = "创建文章任务")
@@ -179,6 +184,15 @@ public class ArticleController {
         List<ArticleState.OutlineSection> modifiedOutline = articleService.aiModifyOutline(request.getTaskId(), request.getModifySuggestion(), loginUser);
 
         return ResultUtils.success(modifiedOutline);
+    }
+
+
+    @GetMapping("/execution-logs/{taskId}")
+    @Operation(summary = "获取任务执行日志")
+    public BaseResponse<AgentExecutionStats> getExecutionLogs(@PathVariable String taskId) {
+        ThrowUtils.throwIf(taskId == null || taskId.trim().isEmpty(),ErrorCode.PARAMS_ERROR,"任务ID不能为空");
+        AgentExecutionStats stats = agentLogService.getExecutionStats(taskId);
+        return ResultUtils.success(stats);
     }
 }
 

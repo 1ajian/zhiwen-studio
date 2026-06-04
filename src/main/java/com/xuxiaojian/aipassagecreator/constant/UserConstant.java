@@ -29,5 +29,10 @@ public interface UserConstant {
      * VIP角色
      */
     String VIP_ROLE = "vip";
+
+    /**
+     * 默认配额
+     */
+    Long DEFAULT_QUOTA = 5L;
 }
 
