@@ -170,7 +170,7 @@ public interface PromptConstant {
     /**
      * 智能体4：分析配图需求（支持多种图片来源，使用占位符方案）
      */
-    String AGENT4_IMAGE_REQUIREMENTS_PROMPT = """
+   /* String AGENT4_IMAGE_REQUIREMENTS_PROMPT = """
             你是一位专业的新媒体编辑,擅长为文章配图。
             
             根据以下文章内容,分析配图需求,并在正文中插入图片占位符:
@@ -262,7 +262,81 @@ public interface PromptConstant {
                 }
               ]
             }
+            """;*/
+
+    /**
+     * 智能体4：分析配图需求（支持多种图片来源，使用占位符方案）
+     */
+    String AGENT4_IMAGE_REQUIREMENTS_PROMPT = """
+            你是一位专业的新媒体编辑,擅长为文章配图。
+            
+            根据以下文章内容,分析配图需求,并在正文中插入图片占位符:
+            主标题：{mainTitle}
+            正文：
+            {content}
+            
+            【重要】可用的配图方式（请严格只从以下方式中选择，禁止使用未列出的方式）：
+            {availableMethods}
+            
+            各配图方式的使用要求：
+            {methodUsageGuide}
+            
+            通用要求:
+            1. 识别需要配图的位置(封面、关键章节、段落之间等)
+            2. 根据文章内容和结构灵活决定配图数量，避免过多或过少
+            3. **在正文中插入占位符**：使用以下两种格式
+               - 普通图片占位符：{{IMAGE_PLACEHOLDER_N}}，其中 N 为配图序号（1, 2, 3...），必须独占一行
+               - Icon 占位符：{{ICON_PLACEHOLDER_N}}，可以放在文字行内任意位置（用于 ICONIFY 类型）
+               - 注意：position=1 的封面图不需要占位符，不要放在正文中
+               - 其他配图占位符可以放在任意合适位置（章节标题后、段落之间、列表项中、文字行内等）
+            4. **imageSource 字段必须且只能是上述可用配图方式之一，不要使用其他值**
+            5. placeholderId 必须与正文中插入的占位符完全一致
+            6. position=1 为封面图
+            
+            请直接返回 JSON 格式,不要有其他内容:
+            {
+              "contentWithPlaceholders": "",
+              "imageRequirements": [
+                {
+                  "position": 1,
+                  "type": "cover",
+                  "sectionTitle": "",
+                  "imageSource": "NANO_BANANA",
+                  "keywords": "",
+                  "prompt": "A modern minimalist illustration of AI technology concept, featuring abstract neural network patterns with blue and purple gradient colors, clean design suitable for article cover, 16:9 aspect ratio",
+                  "placeholderId": ""
+                },
+                {
+                  "position": 2,
+                  "type": "section",
+                  "sectionTitle": "章节标题1",
+                  "imageSource": "PEXELS",
+                  "keywords": "business success teamwork office",
+                  "prompt": "",
+                  "placeholderId": "{{IMAGE_PLACEHOLDER_1}}"
+                },
+                {
+                  "position": 3,
+                  "type": "inline",
+                  "sectionTitle": "",
+                  "imageSource": "ICONIFY",
+                  "keywords": "check circle",
+                  "prompt": "",
+                  "placeholderId": "{{ICON_PLACEHOLDER_1}}"
+                },
+                {
+                  "position": 4,
+                  "type": "section",
+                  "sectionTitle": "章节标题2",
+                  "imageSource": "MERMAID",
+                  "keywords": "",
+                  "prompt": "flowchart TB\\n    A[用户请求] --> B[负载均衡]\\n    B --> C[应用服务器]",
+                  "placeholderId": "{{IMAGE_PLACEHOLDER_2}}"
+                }
+              ]
+            }
             """;
+
 
     /*String AGENT4_IMAGE_REQUIREMENTS_PROMPT = """
         你是一位专业的新媒体编辑,擅长为文章配图。

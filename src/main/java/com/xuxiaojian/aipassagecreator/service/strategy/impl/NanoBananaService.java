@@ -119,7 +119,7 @@ public class NanoBananaService implements ImageSearchService {
 
     @Override
     public boolean isAvailable() {
-        return true;
+        return false;
     }
 
     /**
