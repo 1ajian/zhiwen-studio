@@ -7,7 +7,10 @@ import com.xuxiaojian.aipassagecreator.model.entity.User;
 import com.xuxiaojian.aipassagecreator.model.vo.LoginUserVO;
 import com.xuxiaojian.aipassagecreator.model.vo.UserVO;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 /**
@@ -95,4 +98,17 @@ public interface UserService extends IService<User> {
      * @return
      */
     List<UserVO> getUserVOList(List<User> userList);
+
+    /**
+     * 批量导入
+     * @param multipartFile
+     * @return
+     */
+    Boolean importAll(MultipartFile multipartFile);
+
+    /**
+     * 批量导出
+     * @param response
+     */
+    void exportAll(HttpServletResponse response);
 }

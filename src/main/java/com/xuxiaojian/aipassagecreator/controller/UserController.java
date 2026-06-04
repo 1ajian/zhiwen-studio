@@ -16,10 +16,16 @@ import com.xuxiaojian.aipassagecreator.model.entity.User;
 import com.xuxiaojian.aipassagecreator.model.vo.LoginUserVO;
 import com.xuxiaojian.aipassagecreator.model.vo.UserVO;
 import com.xuxiaojian.aipassagecreator.service.UserService;
+import com.xuxiaojian.aipassagecreator.utils.excel.ExcelUtils;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -31,6 +37,7 @@ import java.util.List;
  * @Create 2026-05-26 21:33
  * @Version 1.0
  */
+@Slf4j
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -222,5 +229,26 @@ public class UserController {
         userVOPage.setRecords(userVOList);
         return ResultUtils.success(userVOPage);
 
+    }
+
+    @GetMapping("/template/get")
+    @Operation(summary = "获取用户导入模板")
+    public void getUserImportTemplate(HttpServletResponse response) throws IOException {
+        String fileName = "用户导入模板.xlsx";
+        ExcelUtils.downloadTemplate("templates/user-import-template.xlsx",fileName,response);
+    }
+
+    @PostMapping("/import/all")
+    @Operation(summary = "批量导入")
+    public BaseResponse<Boolean> importAll(@RequestBody MultipartFile multipartFile) {
+        log.info("开始导入: {}",multipartFile.getOriginalFilename());
+        return ResultUtils.success(userService.importAll(multipartFile));
+    }
+
+    @GetMapping("/export/all")
+    @Operation(summary = "批量导出")
+    public void exportAll(HttpServletResponse response) {
+        log.info("开始导出用户数据");
+        userService.exportAll(response);
     }
 }
