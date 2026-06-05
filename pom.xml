@@ -99,6 +99,12 @@
             <groupId>org.springframework.session</groupId>
             <artifactId>spring-session-data-redis</artifactId>
         </dependency>
+        <!-- Redisson，用于退款补偿失败后的延迟重试队列 -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>4.3.1</version>
+        </dependency>
         <!--https://mybatis-flex.com/zh/others/codegen.html-->
         <dependency>
             <groupId>com.mybatis-flex</groupId>

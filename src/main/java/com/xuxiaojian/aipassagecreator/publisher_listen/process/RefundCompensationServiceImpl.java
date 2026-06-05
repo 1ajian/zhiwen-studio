@@ -140,7 +140,6 @@ public class RefundCompensationServiceImpl implements RefundCompensationService 
         event.setNextRetryTime(nextRetryTime);
         if (nextRetryTime == null || nextRetryCount > refundCompensationProperties.getMaxRedisRetry()) {
             persistFailedEvent(event);
-            refundCompensationEventStore.removeRetry(event.getEventId());
             return;
         }
 

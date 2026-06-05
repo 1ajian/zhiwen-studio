@@ -6,9 +6,13 @@ import com.xuxiaojian.aipassagecreator.config.RefundCompensationProperties;
 import com.xuxiaojian.aipassagecreator.model.enums.RefundCompensationStatusEnum;
 import com.xuxiaojian.aipassagecreator.publisher_listen.event.RefundCompensationEvent;
 import jakarta.annotation.Resource;
+import org.redisson.api.RBlockingDeque;
+import org.redisson.api.RDelayedQueue;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -16,14 +20,12 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 基于 Redis 的退款补偿事件存储实现。
- * 使用字符串序列化保存事件快照，并使用 ZSet 管理待重试事件。
+ * 使用字符串序列化保存事件快照，并使用 Redisson 延迟队列管理待重试事件。
  */
 @Component
 public class RedisRefundCompensationEventStore implements RefundCompensationEventStore {
 
     private static final String EVENT_KEY_PREFIX = "payment:refund:compensate:event:";
-
-    private static final String RETRY_KEY = "payment:refund:compensate:retry";
 
     private static final String LOCK_KEY_PREFIX = "payment:refund:compensate:lock:";
 
@@ -35,6 +37,9 @@ public class RedisRefundCompensationEventStore implements RefundCompensationEven
 
     @Resource
     private RefundCompensationProperties refundCompensationProperties;
+
+    @Resource
+    private RedissonClient redissonClient;
 
     /**
      * 保存或者更改事件到Redis
@@ -90,7 +95,6 @@ public class RedisRefundCompensationEventStore implements RefundCompensationEven
         if (event == null) {
             return;
         }
-        removeRetry(eventId);
         deleteEvent(eventId);
     }
 
@@ -98,17 +102,21 @@ public class RedisRefundCompensationEventStore implements RefundCompensationEven
     public void scheduleRetry(RefundCompensationEvent event) {
         saveEvent(event);
         if (event.getNextRetryTime() != null) {
-            stringRedisTemplate.opsForZSet().add(RETRY_KEY, event.getEventId(), event.getNextRetryTime().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
+            long delayMillis = Math.max(0L, Duration.between(LocalDateTime.now(), event.getNextRetryTime()).toMillis());
+            RBlockingDeque<String> blockingDeque = redissonClient.getBlockingDeque(refundCompensationProperties.getRetryQueueName());
+            RDelayedQueue<String> delayedQueue = redissonClient.getDelayedQueue(blockingDeque);
+            delayedQueue.offer(event.getEventId(), delayMillis, TimeUnit.MILLISECONDS);
         }
     }
 
     /**
-     * 删除重试任务
+     * 删除重试任务。
+     * 当前已改为 Redisson 延迟队列，队列消息到期后会自动迁移到阻塞队列，此处无需显式删除。
      * @param eventId
      */
     @Override
     public void removeRetry(String eventId) {
-        stringRedisTemplate.opsForZSet().remove(RETRY_KEY, eventId);
+        // Redisson 延迟队列场景下不再维护 ZSet，因此这里保留空实现以兼容旧接口。
     }
 
     /**
@@ -124,19 +132,15 @@ public class RedisRefundCompensationEventStore implements RefundCompensationEven
     }
 
     /**
-     * 获取时间戳区间的全部事件Id
+     * 获取时间戳区间的全部事件Id。
+     * 当前短期重试已改为 Redisson 延迟队列，不再需要业务侧定时扫描。
      * @param now
      * @param limit
      * @return
      */
     @Override
     public List<String> pollRetryEventIds(LocalDateTime now, int limit) {
-        long maxScore = now.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
-        var values = stringRedisTemplate.opsForZSet().rangeByScore(RETRY_KEY, 0, maxScore, 0, limit);
-        if (values == null || values.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return values.stream().toList();
+        return Collections.emptyList();
     }
 
     /**

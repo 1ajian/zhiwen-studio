@@ -66,4 +66,26 @@ public class AsyncConfig {
         executor.initialize();
         return executor;
     }
+
+    /**
+     * 退款补偿延迟队列消费线程池。
+     * 单线程即可按顺序阻塞读取 Redisson 队列，同时通过业务锁保证多实例幂等。
+     *
+     * @return 延迟队列消费线程池
+     */
+    @Bean(name = "refundCompensationDelayQueueExecutor")
+    public Executor refundCompensationDelayQueueExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(10);
+        executor.setKeepAliveSeconds(60);
+        executor.setThreadNamePrefix("refund-delay-queue-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setThreadFactory(Executors.defaultThreadFactory());
+        executor.setAwaitTerminationSeconds(60);
+        executor.setWaitForTasksToCompleteOnShutdown(false);
+        executor.initialize();
+        return executor;
+    }
 }

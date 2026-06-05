@@ -78,6 +78,7 @@ payment:
   refund:
     compensation:
       channel: payment:refund:compensate
+      retry-queue-name: payment:refund:compensate:retry:queue
       max-redis-retry: 3
       redis-retry-delays: [1,2,3]
       redis-scheduler-delay: 20000
@@ -92,6 +93,5 @@ article:
       enabled: true
     # Agent 最大迭代次数
     max-iterations: 10
-
 
 
