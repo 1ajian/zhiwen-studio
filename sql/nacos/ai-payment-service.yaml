@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: ${AI_PAYMENT_DB_URL:jdbc:mysql://localhost:3306/ai_payment?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai}
+    username: ${AI_PAYMENT_DB_USERNAME:root}
+    password: ${AI_PAYMENT_DB_PASSWORD:}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      database: ${REDIS_DATABASE:0}
+      password: ${REDIS_PASSWORD:}
+  session:
+    store-type: redis
+    timeout: 2592000
+
+seata:
+  enabled: true
+  application-id: ai-payment-service
+  tx-service-group: ai-payment-service-seata-service-group
+  enable-auto-data-source-proxy: true
+  data-source-proxy-mode: AT
+  registry:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      cluster: ${SEATA_REGISTRY_CLUSTER:default}
+      group: ${SEATA_REGISTRY_GROUP:SEATA_GROUP}
+      application: ${SEATA_SERVER_APPLICATION:seata-server}
+      namespace: ${NACOS_NAMESPACE:}
+  service:
+    vgroup-mapping:
+      ai-payment-service-seata-service-group: default
+    grouplist:
+      default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
+
+stripe:
+  api-key: ${STRIPE_API_KEY:}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  success-url: ${STRIPE_SUCCESS_URL:http://localhost:5174/payment/success}
+  cancel-url: ${STRIPE_CANCEL_URL:http://localhost:5174/payment/cancel}

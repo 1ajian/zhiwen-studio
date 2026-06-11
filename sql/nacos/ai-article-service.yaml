@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: ${AI_ARTICLE_DB_URL:jdbc:mysql://localhost:3306/ai_article?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai}
+    username: ${AI_ARTICLE_DB_USERNAME:root}
+    password: ${AI_ARTICLE_DB_PASSWORD:}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      database: ${REDIS_DATABASE:0}
+      password: ${REDIS_PASSWORD:}
+  session:
+    store-type: redis
+    timeout: 2592000
+
+article:
+  agent:
+    orchestrator:
+      enabled: ${ARTICLE_AGENT_ORCHESTRATOR_ENABLED:true}

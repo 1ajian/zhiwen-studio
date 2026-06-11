@@ -1,0 +1,74 @@
+server:
+  port: 8102
+  servlet:
+    context-path: /api
+    session:
+      cookie:
+        max-age: 2592000
+
+spring:
+  application:
+    name: ai-article-service
+  config:
+    import:
+      - optional:nacos:ai-article-service.yaml?group=ai-article-service
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${AI_ARTICLE_DB_URL:jdbc:mysql://localhost:3306/ai_article?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai}
+    username: ${AI_ARTICLE_DB_USERNAME:root}
+    password: ${AI_ARTICLE_DB_PASSWORD:}
+  session:
+    store-type: redis
+    timeout: 2592000
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      database: ${REDIS_DATABASE:0}
+      password: ${REDIS_PASSWORD:}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        file-extension: yaml
+
+mybatis-flex:
+  configuration:
+    map-underscore-to-camel-case: false
+
+springdoc:
+  group-configs:
+    group: default
+    paths-to-match: /**
+    packages-to-scan: com.xuxiaojian.aipassagecreator
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+mermaid:
+  cli-command: ${MERMAID_CLI_COMMAND:mmdc}
+  background-color: transparent
+  output-format: svg
+  width: 1200
+  timeout: 30000
+
+iconify:
+  api-url: ${ICONIFY_API_URL:https://api.iconify.design}
+  search-limit: 10
+  default-height: 64
+  default-color: ""
+
+svg-diagram:
+  default-width: 800
+  default-height: 600
+  folder: svg-diagrams
+
+article:
+  agent:
+    orchestrator:
+      enabled: ${ARTICLE_AGENT_ORCHESTRATOR_ENABLED:true}
+    max-iterations: 10

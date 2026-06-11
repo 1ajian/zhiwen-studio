@@ -1,0 +1,41 @@
+server:
+  port: 8104
+  servlet:
+    context-path: /api
+    session:
+      cookie:
+        max-age: 2592000
+
+spring:
+  application:
+    name: ai-statistics-service
+  config:
+    import:
+      - optional:nacos:ai-statistics-service?group=ai-statistics-service
+  session:
+    store-type: redis
+    timeout: 2592000
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      database: ${REDIS_DATABASE:0}
+      password: ${REDIS_PASSWORD:}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        file-extension: yaml
+
+springdoc:
+  group-configs:
+    group: default
+    paths-to-match: /**
+    packages-to-scan: com.xuxiaojian.aipassagecreator
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn

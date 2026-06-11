@@ -1,0 +1,44 @@
+server:
+  port: 8100
+
+spring:
+  application:
+    name: ai-gateway
+  config:
+    import:
+      - optional:nacos:ai-gateway.yaml?group=ai-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        file-extension: yaml
+
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+          routes:
+            - id: user-route
+              uri: lb://ai-user-service
+              predicates:
+                        - Path=/api/user/**
+            - id: article-route
+              uri: lb://ai-article-service
+              predicates:
+                        - Path=/api/article/**
+            - id: payment-route
+              uri: lb://ai-payment-service
+              predicates:
+                - Path=/api/payment/**
+            - id: webhook-route
+              uri: lb://ai-payment-service
+              predicates:
+                - Path=/api/webhook/**
+            - id: statistics-route
+              uri: lb://ai-statistics-service
+              predicates:
+                - Path=/api/statistics/**

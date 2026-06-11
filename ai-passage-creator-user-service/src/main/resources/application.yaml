@@ -1,0 +1,76 @@
+server:
+  port: 8101
+  servlet:
+    context-path: /api
+    session:
+      cookie:
+        max-age: 2592000
+
+spring:
+  application:
+    name: ai-user-service
+  config:
+    import:
+      - optional:nacos:ai-user-service.yaml?group=ai-user-service
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${AI_USER_DB_URL:jdbc:mysql://localhost:3306/ai_user?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai}
+    username: ${AI_USER_DB_USERNAME:root}
+    password: ${AI_USER_DB_PASSWORD:}
+  session:
+    store-type: redis
+    timeout: 2592000
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      database: ${REDIS_DATABASE:0}
+      password: ${REDIS_PASSWORD:}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        ip: 127.0.0.1
+        port: 8101
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        file-extension: yaml
+
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+  tx-service-group: user_tx_group
+  enable-auto-data-source-proxy: true
+  data-source-proxy-mode: AT
+  registry:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      cluster: ${SEATA_REGISTRY_CLUSTER:default}
+      group: ${SEATA_REGISTRY_GROUP:SEATA_GROUP}
+      application: ${SEATA_SERVER_APPLICATION:seata-server}
+      namespace: ${NACOS_NAMESPACE:}
+  service:
+    vgroup-mapping:
+      user_tx_group: default
+    grouplist:
+      default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
+
+mybatis-flex:
+  configuration:
+    map-underscore-to-camel-case: false
+
+springdoc:
+  group-configs:
+    group: default
+    paths-to-match: /**
+    packages-to-scan: com.xuxiaojian.aipassagecreator
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+user:
+  password:
+    salt: ${USER_PASSWORD_SALT:xuxiaojian}
